@@ -4,19 +4,19 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group android:translateX="27" android:translateY="27">
-        <!-- Дужка замка -->
+        <!-- Молот кузнеца -->
         <path
-            android:pathData="M20,25 v-8 a7,7 0 0,1 14,0 v8"
-            android:strokeColor="#00FFAA" android:strokeWidth="3"
-            android:fillColor="#00000000" android:strokeLineCap="round"/>
-        <!-- Корпус замка -->
+            android:pathData="M15,20 L25,10 L35,20 L25,30 Z"
+            android:fillColor="#00D9FF"/>
+        <!-- Рукоять -->
         <path
-            android:pathData="M16,25 h22 v16 h-22 z"
-            android:fillColor="#00FFAA"/>
-        <!-- Замочная скважина -->
+            android:pathData="M25,30 L25,45"
+            android:strokeColor="#FF6B35" android:strokeWidth="4"
+            android:strokeLineCap="round"/>
+        <!-- Искры -->
         <path
-            android:pathData="M27,30 a2,2 0 1,1 0,4 a2,2 0 1,1 0,-4 M27,34 v4"
-            android:strokeColor="#1A1A1A" android:strokeWidth="2"
-            android:fillColor="#00000000" android:strokeLineCap="round"/>
+            android:pathData="M40,15 L45,10 M42,20 L48,18 M38,25 L44,27"
+            android:strokeColor="#FF6B35" android:strokeWidth="2"
+            android:strokeLineCap="round"/>
     </group>
 </vector>
