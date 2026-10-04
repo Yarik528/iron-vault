@@ -42,7 +42,7 @@ object CFColors {
     val Success = Color(0xFF00E676)
     val Error = Color(0xFFFF1744)
     val Warning = Color(0xFFFFAB00)
-    
+
     val GradientPrimary = Brush.horizontalGradient(listOf(Primary, Color(0xFF0099CC)))
     val GradientAccent = Brush.horizontalGradient(listOf(Accent, Color(0xFFFF8A50)))
     val GradientLogo = Brush.horizontalGradient(listOf(Primary, Accent))
@@ -81,10 +81,9 @@ fun CryptoForgeApp(vm: VaultViewModel) {
     }
 }
 
-// ===== ОНБОРДИНГ (ПЕРВЫЙ ЗАПУСК) =====
 @Composable
 fun OnboardingScreen(vm: VaultViewModel) {
-    var step by remember { mutableStateOf(0) } // 0 - welcome, 1 - create pin
+    var step by remember { mutableStateOf(0) }
     var pin by remember { mutableStateOf("") }
     var confirmPin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -95,7 +94,6 @@ fun OnboardingScreen(vm: VaultViewModel) {
     ) {
         when (step) {
             0 -> {
-                // Приветственный экран
                 Column(
                     Modifier.padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -111,9 +109,9 @@ fun OnboardingScreen(vm: VaultViewModel) {
                             modifier = Modifier.size(60.dp)
                         )
                     }
-                    
+
                     Spacer(Modifier.height(32.dp))
-                    
+
                     Text(
                         "CryptoForge",
                         fontSize = 32.sp,
@@ -125,18 +123,18 @@ fun OnboardingScreen(vm: VaultViewModel) {
                         fontSize = 16.sp,
                         color = CFColors.TextSecondary
                     )
-                    
+
                     Spacer(Modifier.height(48.dp))
-                    
+
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         FeatureRow(Icons.Default.Lock, "AES-256 шифрование")
                         FeatureRow(Icons.Default.OfflineBolt, "Работает без интернета")
                         FeatureRow(Icons.Default.Shield, "Локальное хранение")
                         FeatureRow(Icons.Default.Fingerprint, "Биометрия (скоро)")
                     }
-                    
+
                     Spacer(Modifier.weight(1f))
-                    
+
                     Button(
                         onClick = { step = 1 },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -153,9 +151,8 @@ fun OnboardingScreen(vm: VaultViewModel) {
                     }
                 }
             }
-            
+
             1 -> {
-                // Создание PIN
                 Column(
                     Modifier.padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -171,9 +168,9 @@ fun OnboardingScreen(vm: VaultViewModel) {
                         fontSize = 14.sp,
                         color = CFColors.TextSecondary
                     )
-                    
+
                     Spacer(Modifier.height(40.dp))
-                    
+
                     OutlinedTextField(
                         value = pin,
                         onValueChange = { if (it.all { c -> c.isDigit() }) pin = it },
@@ -190,9 +187,9 @@ fun OnboardingScreen(vm: VaultViewModel) {
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true
                     )
-                    
+
                     Spacer(Modifier.height(16.dp))
-                    
+
                     OutlinedTextField(
                         value = confirmPin,
                         onValueChange = { if (it.all { c -> c.isDigit() }) confirmPin = it },
@@ -209,20 +206,21 @@ fun OnboardingScreen(vm: VaultViewModel) {
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true
                     )
-                    
+
                     if (error != null) {
                         Spacer(Modifier.height(16.dp))
                         Text(error!!, color = CFColors.Error, fontSize = 14.sp)
                     }
-                    
+
                     Spacer(Modifier.height(32.dp))
-                    
+
                     Button(
                         onClick = {
                             when {
                                 pin.length < 4 -> error = "PIN должен быть минимум 4 цифры"
                                 pin != confirmPin -> error = "PIN-коды не совпадают"
                                 else -> {
+                                    error = null
                                     vm.setupPin(pin)
                                 }
                             }
@@ -234,18 +232,19 @@ fun OnboardingScreen(vm: VaultViewModel) {
                         enabled = pin.length >= 4
                     ) {
                         Box(
-                            Modifier.fillMaxSize().background(
-                                if (pin.length >= 4) CFColors.GradientPrimary 
-                                else CFColors.SurfaceLight
-                            ),
+                            modifier = if (pin.length >= 4) {
+                                Modifier.fillMaxSize().background(CFColors.GradientPrimary)
+                            } else {
+                                Modifier.fillMaxSize().background(CFColors.SurfaceLight)
+                            },
                             contentAlignment = Alignment.Center
                         ) {
                             Text("СОЗДАТЬ PIN", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                    
+
                     Spacer(Modifier.height(16.dp))
-                    
+
                     TextButton(onClick = { step = 0 }) {
                         Text("Назад", color = CFColors.TextSecondary)
                     }
@@ -269,7 +268,6 @@ fun FeatureRow(icon: ImageVector, text: String) {
     }
 }
 
-// ===== ЭКРАН БЛОКИРОВКИ =====
 @Composable
 fun LockScreen(vm: VaultViewModel, authType: AuthType) {
     var pin by remember { mutableStateOf("") }
@@ -297,16 +295,16 @@ fun LockScreen(vm: VaultViewModel, authType: AuthType) {
                     modifier = Modifier.size(50.dp)
                 )
             }
-            
+
             Spacer(Modifier.height(24.dp))
-            
+
             Text(
                 "CryptoForge",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = CFColors.TextPrimary
             )
-            
+
             Spacer(Modifier.height(32.dp))
 
             when (authType) {
@@ -327,9 +325,9 @@ fun LockScreen(vm: VaultViewModel, authType: AuthType) {
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true
                     )
-                    
+
                     Spacer(Modifier.height(24.dp))
-                    
+
                     Button(
                         onClick = { vm.unlockWithPin(pin, useDecoy) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -345,7 +343,7 @@ fun LockScreen(vm: VaultViewModel, authType: AuthType) {
                         }
                     }
                 }
-                
+
                 AuthType.PASSWORD -> {
                     OutlinedTextField(
                         value = password,
@@ -363,9 +361,9 @@ fun LockScreen(vm: VaultViewModel, authType: AuthType) {
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true
                     )
-                    
+
                     Spacer(Modifier.height(24.dp))
-                    
+
                     Button(
                         onClick = { vm.unlockWithPassword(password, useDecoy) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -381,26 +379,25 @@ fun LockScreen(vm: VaultViewModel, authType: AuthType) {
                         }
                     }
                 }
-                
+
                 AuthType.PATTERN -> {
                     Text("Нарисуйте графический ключ", color = CFColors.TextSecondary, fontSize = 14.sp)
                     Spacer(Modifier.height(24.dp))
-                    
+
                     PatternLock(
                         size = 3,
                         onPatternComplete = { pattern -> vm.unlockWithPattern(pattern, useDecoy) },
                         modifier = Modifier.padding(16.dp)
                     )
                 }
-                
+
                 AuthType.NONE -> {
                     Text("Метод защиты не установлен", color = CFColors.Error)
                 }
             }
 
             Spacer(Modifier.height(24.dp))
-            
-            // Переключатель фейкового режима
+
             Row(
                 Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -436,7 +433,6 @@ fun LockScreen(vm: VaultViewModel, authType: AuthType) {
     }
 }
 
-// ===== ГЛАВНЫЙ ЭКРАН =====
 @Composable
 fun VaultScreen(vm: VaultViewModel) {
     val entries by vm.entries.collectAsState()
@@ -447,7 +443,7 @@ fun VaultScreen(vm: VaultViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.Build,
@@ -501,11 +497,11 @@ fun VaultScreen(vm: VaultViewModel) {
             item {
                 StatsCard(entries.size, isDecoy)
             }
-            
+
             items(entries, key = { it.id }) { entry ->
                 EntryCard(entry, vm)
             }
-            
+
             if (entries.isEmpty()) {
                 item {
                     EmptyState(isDecoy)
@@ -517,7 +513,7 @@ fun VaultScreen(vm: VaultViewModel) {
     if (showAddDialog) {
         AddEntryDialog(vm) { showAddDialog = false }
     }
-    
+
     if (showSettings) {
         SettingsScreen(vm) { showSettings = false }
     }
@@ -589,9 +585,9 @@ fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
                 ) {
                     Icon(Icons.Default.Key, contentDescription = null, tint = CFColors.Primary, modifier = Modifier.size(20.dp))
                 }
-                
+
                 Spacer(Modifier.width(12.dp))
-                
+
                 Column(Modifier.weight(1f)) {
                     Text(
                         entry.title,
@@ -605,7 +601,7 @@ fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
                         fontSize = 13.sp
                     )
                 }
-                
+
                 IconButton(
                     onClick = { vm.deleteEntry(entry.id) },
                     modifier = Modifier.size(36.dp).clip(CircleShape).background(CFColors.Error.copy(alpha = 0.1f))
@@ -613,9 +609,9 @@ fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = CFColors.Error, modifier = Modifier.size(18.dp))
                 }
             }
-            
+
             Spacer(Modifier.height(12.dp))
-            
+
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(CFColors.Background).padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -627,7 +623,7 @@ fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
                     fontFamily = FontFamily.Monospace,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 IconButton(
                     onClick = { showPassword = !showPassword },
                     modifier = Modifier.size(32.dp)
@@ -640,7 +636,7 @@ fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
                     )
                 }
             }
-            
+
             if (entry.notes.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -692,14 +688,14 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Add, contentDescription = null, tint = CFColors.Primary, modifier = Modifier.size(32.dp)) },
-        title = { 
-            Text("Новая запись", color = CFColors.TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold) 
+        title = {
+            Text("Новая запись", color = CFColors.TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
-                    value = title, 
-                    onValueChange = { title = it }, 
+                    value = title,
+                    onValueChange = { title = it },
                     label = { Text("Название", color = CFColors.TextSecondary) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = CFColors.TextPrimary,
@@ -711,8 +707,8 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
                     singleLine = true
                 )
                 OutlinedTextField(
-                    value = username, 
-                    onValueChange = { username = it }, 
+                    value = username,
+                    onValueChange = { username = it },
                     label = { Text("Логин / Email", color = CFColors.TextSecondary) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = CFColors.TextPrimary,
@@ -725,8 +721,8 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
-                        value = password, 
-                        onValueChange = { password = it }, 
+                        value = password,
+                        onValueChange = { password = it },
                         label = { Text("Пароль", color = CFColors.TextSecondary) },
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -747,8 +743,8 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
                     }
                 }
                 OutlinedTextField(
-                    value = notes, 
-                    onValueChange = { notes = it }, 
+                    value = notes,
+                    onValueChange = { notes = it },
                     label = { Text("Заметки (опционально)", color = CFColors.TextSecondary) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = CFColors.TextPrimary,
@@ -781,8 +777,8 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { 
-                Text("Отмена", color = CFColors.TextSecondary) 
+            TextButton(onClick = onDismiss) {
+                Text("Отмена", color = CFColors.TextSecondary)
             }
         },
         containerColor = CFColors.Surface,
@@ -790,15 +786,14 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
     )
 }
 
-// ===== ЭКРАН НАСТРОЕК =====
 @Composable
 fun SettingsScreen(vm: VaultViewModel, onDismiss: () -> Unit) {
     val currentAuthType by vm.currentAuthType.collectAsState()
     var showChangeAuth by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Settings, contentDescription = null, tint = CFColors.Primary)
                 Spacer(Modifier.width(8.dp))
@@ -808,7 +803,7 @@ fun SettingsScreen(vm: VaultViewModel, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Безопасность", color = CFColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                
+
                 SettingsRow(
                     icon = Icons.Default.Lock,
                     title = "Метод защиты",
@@ -820,17 +815,17 @@ fun SettingsScreen(vm: VaultViewModel, onDismiss: () -> Unit) {
                     },
                     onClick = { showChangeAuth = true }
                 )
-                
+
                 Spacer(Modifier.height(16.dp))
                 Text("О приложении", color = CFColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                
+
                 SettingsRow(
                     icon = Icons.Default.Info,
                     title = "Версия",
                     subtitle = "1.0.0",
                     onClick = {}
                 )
-                
+
                 SettingsRow(
                     icon = Icons.Default.Shield,
                     title = "Шифрование",
@@ -840,14 +835,14 @@ fun SettingsScreen(vm: VaultViewModel, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { 
-                Text("Закрыть", color = CFColors.Primary) 
+            TextButton(onClick = onDismiss) {
+                Text("Закрыть", color = CFColors.Primary)
             }
         },
         containerColor = CFColors.Surface,
         shape = RoundedCornerShape(20.dp)
     )
-    
+
     if (showChangeAuth) {
         ChangeAuthDialog(vm) { showChangeAuth = false }
     }
@@ -871,19 +866,20 @@ fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onClick: () 
 
 @Composable
 fun ChangeAuthDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
-    var selectedType by remember { mutableStateOf(vm.currentAuthType.collectAsState().value) }
+    val currentAuthType by vm.currentAuthType.collectAsState()
+    var selectedType by remember { mutableStateOf(currentAuthType) }
     var pin by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var pattern by remember { mutableStateOf<List<Int>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Изменить метод защиты", color = CFColors.TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 AuthTypeSelector(selectedType) { selectedType = it }
-                
+
                 when (selectedType) {
                     AuthType.PIN -> {
                         OutlinedTextField(
@@ -925,7 +921,7 @@ fun ChangeAuthDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
                         Text("Защита будет отключена", color = CFColors.Warning, fontSize = 14.sp)
                     }
                 }
-                
+
                 if (error != null) {
                     Text(error!!, color = CFColors.Error, fontSize = 14.sp)
                 }
@@ -961,7 +957,7 @@ fun ChangeAuthDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
                             }
                         }
                         AuthType.NONE -> {
-                            vm.changeAuthType(AuthType.NONE)
+                            vm.setupPin("")
                             onDismiss()
                         }
                     }
