@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.ironvault
 
 import android.os.Bundle
@@ -84,7 +86,11 @@ fun LockScreen(vm: VaultViewModel) {
         Spacer(Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = useDecoy, onCheckedChange = { useDecoy = it })
+            Checkbox(
+                checked = useDecoy, 
+                onCheckedChange = { useDecoy = it },
+                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF00FFAA))
+            )
             Text("Фейковый режим (под давлением)", color = Color.Gray, fontSize = 12.sp)
         }
 
@@ -120,7 +126,7 @@ fun VaultScreen(vm: VaultViewModel) {
             TopAppBar(
                 title = { 
                     Text(
-                        if (isDecoy) " ФЕЙКОВЫЙ СЕЙФ" else "🔐 ЖЕЛЕЗНЫЙ СЕЙФ",
+                        if (isDecoy) "⚠️ ФЕЙКОВЫЙ СЕЙФ" else "🔐 ЖЕЛЕЗНЫЙ СЕЙФ",
                         color = if (isDecoy) Color(0xFFFFAA00) else Color(0xFF00FFAA)
                     )
                 },
@@ -145,10 +151,10 @@ fun VaultScreen(vm: VaultViewModel) {
         containerColor = Color(0xFF0A0A0F)
     ) { padding ->
         LazyColumn(
-            Modifier.padding(padding).padding(horizontal = 12.dp),
+            Modifier.padding(padding).padding(horizontal = 12.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(entries) { entry -> EntryCard(entry) }
+            items(entries) { entry -> EntryCard(entry, vm) }
         }
     }
 
@@ -158,7 +164,9 @@ fun VaultScreen(vm: VaultViewModel) {
 }
 
 @Composable
-fun EntryCard(entry: VaultEntry) {
+fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
+    var showPassword by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF12121A)),
@@ -168,11 +176,33 @@ fun EntryCard(entry: VaultEntry) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Key, contentDescription = null, tint = Color(0xFF00FFAA))
                 Spacer(Modifier.width(8.dp))
-                Text(entry.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(entry.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                
+                // Кнопка удаления
+                IconButton(onClick = { vm.deleteEntry(entry.id) }, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF1744), modifier = Modifier.size(20.dp))
+                }
             }
             Spacer(Modifier.height(8.dp))
             Text("👤 ${entry.username}", color = Color.Gray, fontSize = 14.sp)
-            Text("🔑 ••••••••", color = Color(0xFF00FFAA), fontSize = 14.sp)
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (showPassword) entry.password else "🔑 ••••••••", 
+                    color = Color(0xFF00FFAA), 
+                    fontSize = 14.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = { showPassword = !showPassword }, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = "Toggle",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            
             if (entry.notes.isNotBlank()) {
                 Spacer(Modifier.height(4.dp))
                 Text("📝 ${entry.notes}", color = Color.Gray, fontSize = 12.sp)
@@ -193,11 +223,23 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
         title = { Text("Новая запись", color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Название") }, colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White))
-                OutlinedTextField(value = username, onValueChange = { username = it }, label = { Text("Логин/Email") }, colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White))
-                Row {
+                OutlinedTextField(
+                    value = title, 
+                    onValueChange = { title = it }, 
+                    label = { Text("Название") }, 
+                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                )
+                OutlinedTextField(
+                    value = username, 
+                    onValueChange = { username = it }, 
+                    label = { Text("Логин/Email") }, 
+                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
-                        value = password, onValueChange = { password = it }, label = { Text("Пароль") },
+                        value = password, 
+                        onValueChange = { password = it }, 
+                        label = { Text("Пароль") },
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
                     )
@@ -205,19 +247,27 @@ fun AddEntryDialog(vm: VaultViewModel, onDismiss: () -> Unit) {
                         Icon(Icons.Default.Refresh, contentDescription = "Generate", tint = Color(0xFF00FFAA))
                     }
                 }
-                OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Заметки") }, colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White))
+                OutlinedTextField(
+                    value = notes, 
+                    onValueChange = { notes = it }, 
+                    label = { Text("Заметки") }, 
+                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
+                )
             }
         },
         confirmButton = {
-            Button(onClick = {
-                vm.addEntry(title, username, password, notes)
-                onDismiss()
-            }) {
-                Text("Сохранить")
+            Button(
+                onClick = {
+                    vm.addEntry(title, username, password, notes)
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(Color(0xFF00FFAA))
+            ) {
+                Text("Сохранить", color = Color.Black)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Отмена") }
+            TextButton(onClick = onDismiss) { Text("Отмена", color = Color.Gray) }
         },
         containerColor = Color(0xFF12121A)
     )
