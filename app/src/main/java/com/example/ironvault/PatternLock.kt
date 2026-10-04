@@ -21,17 +21,17 @@ fun PatternLock(
 ) {
     val dotSize = 20.dp
     val spacing = 60.dp
-    
+
     val selectedPoints = remember { mutableStateListOf<Int>() }
     val currentLineEnd = remember { mutableStateOf<Offset?>(null) }
     var isDragging by remember { mutableStateOf(false) }
-    
+
     val density = LocalDensity.current
     val dotSizePx = with(density) { dotSize.toPx() }
     val spacingPx = with(density) { spacing.toPx() }
-    
+
     val totalSize = (size - 1) * spacingPx + dotSizePx * 2
-    
+
     fun getPointPosition(index: Int): Offset {
         val row = index / size
         val col = index % size
@@ -40,18 +40,21 @@ fun PatternLock(
             y = row * spacingPx + dotSizePx
         )
     }
-    
+
     fun getPointAt(offset: Offset): Int? {
         for (i in 0 until size * size) {
             val point = getPointPosition(i)
-            val distance = sqrt((offset.x - point.x) * (offset.x - point.x) + (offset.y - point.y) * (offset.y - point.y))
+            val distance = sqrt(
+                (offset.x - point.x) * (offset.x - point.x) +
+                (offset.y - point.y) * (offset.y - point.y)
+            )
             if (distance < dotSizePx * 1.5f) {
                 return i
             }
         }
         return null
     }
-    
+
     Box(
         modifier = modifier
             .size(with(density) { totalSize.toDp() })
@@ -60,7 +63,7 @@ fun PatternLock(
                     onDragStart = { offset ->
                         isDragging = true
                         selectedPoints.clear()
-                        getPointAt(offset)?.let { 
+                        getPointAt(offset)?.let {
                             if (!selectedPoints.contains(it)) selectedPoints.add(it)
                         }
                     },
@@ -84,7 +87,6 @@ fun PatternLock(
             }
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            // Рисуем линии между выбранными точками
             for (i in 0 until selectedPoints.size - 1) {
                 val start = getPointPosition(selectedPoints[i])
                 val end = getPointPosition(selectedPoints[i + 1])
@@ -96,8 +98,7 @@ fun PatternLock(
                     cap = StrokeCap.Round
                 )
             }
-            
-            // Линия к текущей позиции пальца
+
             if (isDragging && selectedPoints.isNotEmpty() && currentLineEnd.value != null) {
                 val lastPoint = getPointPosition(selectedPoints.last())
                 drawLine(
@@ -108,13 +109,11 @@ fun PatternLock(
                     cap = StrokeCap.Round
                 )
             }
-            
-            // Рисуем точки
+
             for (i in 0 until size * size) {
                 val position = getPointPosition(i)
                 val isSelected = selectedPoints.contains(i)
-                
-                // Внешний круг (если выбрана)
+
                 if (isSelected) {
                     drawCircle(
                         color = Color(0xFF00D9FF).copy(alpha = 0.2f),
@@ -122,8 +121,7 @@ fun PatternLock(
                         center = position
                     )
                 }
-                
-                // Внутренний круг
+
                 drawCircle(
                     color = if (isSelected) Color(0xFF00D9FF) else Color(0xFF3A3F5C),
                     radius = dotSizePx,
