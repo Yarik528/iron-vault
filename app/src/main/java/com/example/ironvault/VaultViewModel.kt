@@ -18,93 +18,72 @@ class VaultViewModel : ViewModel() {
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
-    
+
     private val _isFirstLaunch = MutableStateFlow(true)
     val isFirstLaunch: StateFlow<Boolean> = _isFirstLaunch
-    
+
     private val _currentAuthType = MutableStateFlow(AuthType.NONE)
     val currentAuthType: StateFlow<AuthType> = _currentAuthType
 
     private lateinit var vaultManager: VaultManager
     private lateinit var crypto: CryptoEngine
     private lateinit var authManager: AuthManager
-    private var currentPassword: String? = null
 
     fun init(context: Context) {
         vaultManager = VaultManager(context)
         crypto = CryptoEngine()
         authManager = AuthManager(context)
-        
         _isFirstLaunch.value = authManager.isFirstLaunch()
         _currentAuthType.value = authManager.getAuthType()
     }
 
     fun setupPin(pin: String): Boolean {
-        val success = authManager.setupPin(pin)
-        if (success) {
+        val ok = authManager.setupPin(pin)
+        if (ok) {
             _isFirstLaunch.value = false
             _currentAuthType.value = AuthType.PIN
         }
-        return success
+        return ok
     }
-    
+
     fun setupPassword(password: String): Boolean {
-        val success = authManager.setupPassword(password)
-        if (success) {
+        val ok = authManager.setupPassword(password)
+        if (ok) {
             _isFirstLaunch.value = false
             _currentAuthType.value = AuthType.PASSWORD
-            currentPassword = password
         }
-        return success
+        return ok
     }
-    
+
     fun setupPattern(pattern: List<Int>): Boolean {
-        val success = authManager.setupPattern(pattern)
-        if (success) {
+        val ok = authManager.setupPattern(pattern)
+        if (ok) {
             _isFirstLaunch.value = false
             _currentAuthType.value = AuthType.PATTERN
         }
-        return success
-    }
-    
-    fun changeAuthType(type: AuthType) {
-        authManager.setAuthType(type)
-        _currentAuthType.value = type
+        return ok
     }
 
     fun unlockWithPin(pin: String, useDecoy: Boolean = false) {
-        if (authManager.verifyPin(pin)) {
-            unlockInternal(useDecoy)
-        } else {
-            _error.value = "Неверный PIN-код"
-        }
+        if (authManager.verifyPin(pin)) onSuccess(useDecoy) else onFailure()
     }
-    
+
     fun unlockWithPassword(password: String, useDecoy: Boolean = false) {
-        if (authManager.verifyPassword(password)) {
-            currentPassword = password
-            unlockInternal(useDecoy)
-        } else {
-            _error.value = "Неверный пароль"
-        }
+        if (authManager.verifyPassword(password)) onSuccess(useDecoy) else onFailure()
     }
-    
+
     fun unlockWithPattern(pattern: List<Int>, useDecoy: Boolean = false) {
-        if (authManager.verifyPattern(pattern)) {
-            unlockInternal(useDecoy)
-        } else {
-            _error.value = "Неверный графический ключ"
-        }
+        if (authManager.verifyPattern(pattern)) onSuccess(useDecoy) else onFailure()
     }
-    
-    private fun unlockInternal(useDecoy: Boolean) {
+
+    private fun onSuccess(useDecoy: Boolean) {
+        authManager.resetFailedAttempts()
         try {
             if (useDecoy) {
                 _entries.value = vaultManager.loadDecoyEntries()
                 _isDecoyMode.value = true
             } else {
-                val password = currentPassword ?: ""
-                _entries.value = vaultManager.loadEntries(password)
+                _entries.value = vaultManager.loadEntries(vaultManager.getVaultKey())
                 _isDecoyMode.value = false
             }
             _isUnlocked.value = true
@@ -114,11 +93,26 @@ class VaultViewModel : ViewModel() {
         }
     }
 
+    private fun onFailure() {
+        val attempts = authManager.registerFailedAttempt()
+        if (attempts >= 10) {
+            vaultManager.wipeAllData()
+            authManager.clearAuth()
+            _isFirstLaunch.value = true
+            _currentAuthType.value = AuthType.NONE
+            _entries.value = emptyList()
+            _isUnlocked.value = false
+            _error.value = "ПРЕВЫШЕН ЛИМИТ ПОПЫТОК. ВСЕ ДАННЫЕ УНИЧТОЖЕНЫ."
+        } else {
+            _error.value = "Неверный код. Осталось попыток: ${10 - attempts}"
+        }
+    }
+
     fun lock() {
         _isUnlocked.value = false
         _entries.value = emptyList()
-        currentPassword = null
         _isDecoyMode.value = false
+        _error.value = null
     }
 
     fun addEntry(title: String, username: String, password: String, notes: String) {
@@ -130,22 +124,16 @@ class VaultViewModel : ViewModel() {
             notes = notes,
             createdAt = System.currentTimeMillis()
         )
-        
-        currentPassword?.let { pwd ->
-            if (vaultManager.saveEntry(entry, pwd)) {
-                _entries.value = _entries.value + entry
-            }
+        if (vaultManager.saveEntry(entry, vaultManager.getVaultKey())) {
+            _entries.value = _entries.value + entry
         }
-    }
-
-    fun generatePassword(): String {
-        return crypto.generatePassword()
     }
 
     fun deleteEntry(id: String) {
         val updated = _entries.value.filter { it.id != id }
+        vaultManager.saveEntriesDirect(updated, vaultManager.getVaultKey())
         _entries.value = updated
     }
-    
-    fun getAuthManager(): AuthManager = authManager
+
+    fun generatePassword(): String = crypto.generatePassword()
 }
