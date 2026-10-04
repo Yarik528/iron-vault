@@ -12,7 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -61,7 +64,7 @@ fun LockScreen(vm: VaultViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF00FFAA), modifier = Modifier.size(80.dp))
+        Text("🔐", fontSize = 80.sp)
         Spacer(Modifier.height(24.dp))
         Text("ЖЕЛЕЗНЫЙ СЕЙФ", color = Color(0xFF00FFAA), fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
@@ -133,7 +136,7 @@ fun VaultScreen(vm: VaultViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF12121A)),
                 actions = {
                     IconButton(onClick = { vm.lock() }) {
-                        Icon(Icons.Default.Lock, contentDescription = "Lock", tint = Color.White)
+                        Text("🔒", fontSize = 24.sp)
                     }
                 }
             )
@@ -174,11 +177,10 @@ fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Key, contentDescription = null, tint = Color(0xFF00FFAA))
+                Text("🔑", fontSize = 24.sp)
                 Spacer(Modifier.width(8.dp))
                 Text(entry.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 
-                // Кнопка удаления
                 IconButton(onClick = { vm.deleteEntry(entry.id) }, modifier = Modifier.size(32.dp)) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF1744), modifier = Modifier.size(20.dp))
                 }
@@ -188,18 +190,13 @@ fun EntryCard(entry: VaultEntry, vm: VaultViewModel) {
             
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    if (showPassword) entry.password else "🔑 ••••••••", 
+                    if (showPassword) "🔓 ${entry.password}" else "🔒 ••••••••", 
                     color = Color(0xFF00FFAA), 
                     fontSize = 14.sp,
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(onClick = { showPassword = !showPassword }, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "Toggle",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
-                    )
+                TextButton(onClick = { showPassword = !showPassword }) {
+                    Text(if (showPassword) "🙈" else "👁️", fontSize = 20.sp)
                 }
             }
             
